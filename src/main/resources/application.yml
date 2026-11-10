@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: shortlink
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/shortlink}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:123}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none          # schema is owned by Flyway (src/main/resources/db/migration)
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 500ms           # never let a slow Redis stall request threads
+      connect-timeout: 500ms
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+shortlink:
+  base-url: ${BASE_URL:http://localhost:8080}
+  trust-proxy: ${TRUST_PROXY:false}   # honour X-Forwarded-For only when behind a trusted proxy
+  cache-ttl: 24h
+  click-flush-interval-ms: 5000
+  rate-limit:
+    create:                           # POST /api/v1/urls
+      capacity: 20
+      refill-per-second: 0.33         # ~20 requests/min sustained, bursts up to 20
+    redirect:                         # GET /{code}
+      capacity: 200
+      refill-per-second: 100
